@@ -12,7 +12,7 @@ need your SMTP server details.
 cabal install
 # PullRequestNagger is in your cabal bin directory.
 # That might not be in your PATH.
-./PullRequestNagger
+PullRequestNagger
 ```
 
 TODO
