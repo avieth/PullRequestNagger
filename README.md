@@ -15,6 +15,11 @@ cabal install
 PullRequestNagger
 ```
 
+The program will attempt to grab all open pull requests from the given
+repository belonging to the given user, and then to send an email from the
+given SMTP server using TLS and LOGIN authentication. It works with Google
+mail, in which case the host is `smtp.googlemail.com` port `587`.
+
 TODO
 ====
 
