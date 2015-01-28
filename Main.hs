@@ -9,7 +9,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.ByteString.Char8 as B8
 
 import Text.Blaze.Html5 hiding (command)
-import Text.Blaze.Html5.Attributes
+import Text.Blaze.Html5.Attributes hiding (id)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 
 import System.Console.Haskeline
@@ -57,7 +57,7 @@ instance Show NagError where
   show FailedToFetchPullRequests = "Failed to fetch pull requests!"
   show FailedToSendMail = "Failed to send mail!"
 
-data NagReport = NagOK | NagFailed NagError
+data NagReport = NagOK | NothingToNagAbout | NagFailed NagError
 
 nag :: PullRequestNagger -> IO NagReport
 nag nagger = fmap transformOutput (runExceptT doNag)
@@ -66,15 +66,20 @@ nag nagger = fmap transformOutput (runExceptT doNag)
 
     doNag = do
       pullRequests <- getPullRequests nagger
-      liftIO $ putStrLn ("Got " ++ show (length pullRequests) ++ " pull requests.")
-      mail <- liftIO $ makeEmail nagger pullRequests
-      sendMail nagger mail
-      return NagOK
+      let numberOfPrs = length pullRequests
+      if numberOfPrs == 0
+      then return NothingToNagAbout
+      else do
+        liftIO $ putStrLn ("Got " ++ show numberOfPrs ++ " pull requests.")
+        mail <- liftIO $ makeEmail nagger pullRequests
+        sendMail nagger mail
+        return NagOK
 
-    transformOutput = either (NagFailed) (const NagOK)
+    transformOutput = either (NagFailed) id
 
 printNagReport :: NagReport -> IO ()
 printNagReport (NagOK) = putStrLn "Successfully nagged!"
+printNagReport (NothingToNagAbout) = putStrLn "Nothing to nag about!"
 printNagReport (NagFailed reason) = print reason
 
 getPullRequests :: PullRequestNagger -> ExceptT NagError IO [PullRequest]
